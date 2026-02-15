@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Five Nights at Sunibuns</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Special+Elite&family=Silkscreen:wght@400;700&family=Rubik+Mono+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --distortion-intensity: 0;
+        }
+
+        body {
+            background-color: #000;
+            margin: 0;
+            overflow: hidden;
+            color: #fff;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.95; }
+            5% { opacity: 0.8; }
+            10% { opacity: 1; }
+            15% { opacity: 0.9; }
+            25% { opacity: 1; }
+            30% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes noise {
+            0% { transform: translate(0,0); }
+            10% { transform: translate(-1%,-2%); }
+            20% { transform: translate(-3%,1%); }
+            30% { transform: translate(2%,-3%); }
+            40% { transform: translate(-2%,2%); }
+            50% { transform: translate(-1%,1%); }
+            60% { transform: translate(3%,0); }
+            70% { transform: translate(0,2%); }
+            80% { transform: translate(-3%,0); }
+            90% { transform: translate(2%,1%); }
+            100% { transform: translate(1%,0); }
+        }
+
+        @keyframes cam-static-anim {
+            0% { background-position: 0 0; opacity: 0.3; }
+            20% { background-position: 15% 10%; opacity: 0.5; }
+            40% { background-position: -10% 25%; opacity: 0.2; }
+            60% { background-position: 25% -15%; opacity: 0.4; }
+            80% { background-position: -5% -10%; opacity: 0.6; }
+            100% { background-position: 0 0; opacity: 0.3; }
+        }
+
+        @keyframes grain {
+          0%, 100% { transform: translate(0, 0); }
+          10% { transform: translate(-5%, -10%); }
+          20% { transform: translate(-15%, 5%); }
+          30% { transform: translate(7%, -25%); }
+          40% { transform: translate(-5%, 25%); }
+          50% { transform: translate(-15%, 10%); }
+          60% { transform: translate(15%, 0%); }
+          70% { transform: translate(0%, 15%); }
+          80% { transform: translate(3%, 35%); }
+          90% { transform: translate(-10%, 10%); }
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes twitch {
+            0% { transform: translate(0,0) scale(1); }
+            2% { transform: translate(3px,-1px) scale(1.01) skew(1deg); }
+            4% { transform: translate(-3px,1px) scale(0.99); }
+            5% { transform: translate(0,0) scale(1); }
+            95% { transform: translate(0,0) scale(1); }
+            97% { transform: translate(12px,6px) scale(1.1) skew(-10deg); filter: invert(0.4) brightness(2); }
+            99% { transform: translate(-12px,-6px) scale(0.9); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+
+        @keyframes strobe {
+            0% { opacity: 0; }
+            1% { opacity: 0.2; }
+            2% { opacity: 0; }
+            3% { opacity: 0.15; }
+            4% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes violent-jumpscare-shake {
+            0% { transform: translate(0,0) rotate(0deg); }
+            10% { transform: translate(-5%, -5%) rotate(-5deg); filter: hue-rotate(90deg) invert(1); }
+            20% { transform: translate(5%, 5%) rotate(5deg); filter: hue-rotate(180deg) contrast(200%); }
+            30% { transform: translate(-8%, 3%) rotate(-10deg); filter: hue-rotate(270deg) brightness(2); }
+            40% { transform: translate(8%, -3%) rotate(10deg); }
+            50% { transform: translate(-10%, -10%) rotate(-15deg); filter: invert(1) contrast(300%); }
+            60% { transform: translate(10%, 10%) rotate(15deg); }
+            70% { transform: translate(-5%, 8%) rotate(-5deg); filter: sepia(1) saturate(10); }
+            80% { transform: translate(5%, -8%) rotate(5deg); }
+            90% { transform: translate(-2%, 2%) rotate(-2deg); }
+            100% { transform: translate(0,0) rotate(0deg); }
+        }
+
+        @keyframes jumpscare-zoom {
+            0% { transform: scale(0.5); opacity: 0; }
+            10% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(2.5); opacity: 1; }
+        }
+
+        @keyframes menu-hover-jitter {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            50% { transform: translateX(2px); }
+            75% { transform: translateX(-1px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes sonar-ripple {
+          0% { transform: scale(0.5); opacity: 0.8; border-width: 4px; }
+          100% { transform: scale(3); opacity: 0; border-width: 1px; }
+        }
+
+        .sonar-effect {
+          position: absolute;
+          border: 2px solid #f39c12;
+          border-radius: 50%;
+          pointer-events: none;
+          animation: sonar-ripple 1.5s ease-out forwards;
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+        }
+
+        .noise-container {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.2;
+            z-index: 40;
+            animation: noise 0.12s infinite steps(4);
+            pointer-events: none;
+        }
+
+        .cam-static-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-size: 200px 200px;
+            animation: cam-static-anim 0.05s infinite;
+            pointer-events: none;
+            mix-blend-mode: color-dodge;
+        }
+
+        .grain-overlay {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: url('https://www.transparenttextures.com/patterns/pinstriped-suit.png');
+            opacity: 0.15;
+            z-index: 41;
+            animation: grain 0.3s infinite steps(2);
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        .strobe-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 48;
+            pointer-events: none;
+            animation: strobe 4s infinite;
+        }
+
+        .scanline-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.08), transparent);
+            animation: scanline 6s linear infinite;
+            pointer-events: none;
+            z-index: 45;
+        }
+
+        .glitch-text {
+            animation: flicker 0.1s infinite;
+            text-shadow: 2px 0 red, -2px 0 blue;
+        }
+
+        .jumpscare-animation {
+            animation: violent-jumpscare-shake 0.15s infinite, jumpscare-zoom 1.2s forwards;
+        }
+
+        .menu-item {
+            position: relative;
+            transition: all 0.2s ease-out;
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            transform: translateY(-50%) scale(0);
+            transition: transform 0.2s ease-out, opacity 0.2s;
+            opacity: 0;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        .menu-item:hover {
+            padding-left: 30px;
+            color: #fff;
+            text-shadow: 2px 0 red, -2px 0 blue, 0 0 15px rgba(255,255,255,0.5);
+            animation: menu-hover-jitter 0.1s infinite step-end;
+            cursor: pointer;
+        }
+
+        .menu-item:hover::before {
+            transform: translateY(-50%) scale(1);
+            opacity: 1;
+        }
+
+        .font-game-title {
+            font-family: 'Rubik Mono One', sans-serif;
+        }
+
+        .font-game-menu {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        /* Barrel Distortion SVG Filter Application */
+        .distortion-wrapper {
+            filter: url(#barrel-distortion);
+            transform: scale(calc(1 + var(--distortion-intensity) * 0.05));
+            transition: transform 0.3s ease-out;
+            width: 100%;
+            height: 100%;
+        }
+
+        .vignette-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 49;
+            background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,calc(0.4 + var(--distortion-intensity) * 0.5)) 100%);
+        }
+
+        #root {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- SVG Filter for Barrel Distortion -->
+    <svg style="position: absolute; width: 0; height: 0;" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="barrel-distortion">
+          <feTurbulence type="fractalNoise" baseFrequency="0.001" numOctaves="1" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="calc(var(--distortion-intensity) * 40)" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
